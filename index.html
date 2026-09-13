@@ -353,10 +353,17 @@
         formData.append('videoClip', selectedFile);
 
         try {
+            // FIX: Use backticks ` ` (key next to number 1 on keyboard), NOT single quotes ' '
             const res = await fetch(`${API}/api/analyze-goal`, {
                 method: 'POST',
                 body: formData
             });
+
+            // Safe check if Render returns an error or is still waking up
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`Server Status ${res.status}: ${errText.substring(0, 120)}`);
+            }
 
             const data = await res.json();
 
@@ -398,7 +405,6 @@
             btn.disabled = false;
             loader.style.display = 'none';
         }
-    }
 </script>
 
 </body>
