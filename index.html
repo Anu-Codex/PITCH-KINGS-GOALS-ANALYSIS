@@ -392,8 +392,8 @@
                 alert("AI Engine Error: " + (data.error || "Could not analyze clip"));
             }
         } catch (e) {
-            console.error(e);
-            alert("Connection to AI Engine failed.");
+            console.error("AI Error:", e);
+            alert("Connection Error: " + e.message + "\nCheck browser Console (F12) for server details.");
         } finally {
             btn.disabled = false;
             loader.style.display = 'none';
