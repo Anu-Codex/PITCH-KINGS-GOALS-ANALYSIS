@@ -353,7 +353,7 @@
         formData.append('videoClip', selectedFile);
 
         try {
-            const res = await fetch('${API}/api/analyze-goal', {
+            const res = await fetch(`${API}/api/analyze-goal`, {
                 method: 'POST',
                 body: formData
             });
