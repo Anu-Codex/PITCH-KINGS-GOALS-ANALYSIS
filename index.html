@@ -287,7 +287,7 @@
 
         <p style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; margin:15px 0 5px;">AI Match Report</p>
         <div class="breakdown-box" id="breakdownText">
-            Sequence starts with the left winger executing a lofted cross. Striker wins the aerial duel and finishes with a downward header past the goalkeeper.
+            Analyzing...
         </div>
 
         <div class="tags-container" id="tagsList"></div>
@@ -303,12 +303,10 @@
     const videoPreview = document.getElementById('videoPreviewWrapper');
     const videoElem = document.getElementById('videoElement');
 
-    // File Selection Handler
     fileInput.addEventListener('change', (e) => {
         handleFileSelect(e.target.files[0]);
     });
 
-    // Drag & Drop
     dropzone.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropzone.classList.add('drag-over');
@@ -328,13 +326,10 @@
         if (!file) return;
         selectedFile = file;
 
-        // Show live player preview
         const url = URL.createObjectURL(file);
         videoElem.src = url;
         videoPreview.style.display = 'block';
         document.getElementById('resultCard').style.display = 'none';
-
-        // Scroll into view
         videoPreview.scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -353,16 +348,19 @@
         formData.append('videoClip', selectedFile);
 
         try {
-            // FIX: Use backticks ` ` (key next to number 1 on keyboard), NOT single quotes ' '
-            const res = await fetch(`${API}/api/analyze-goal`, {
+            // Unbreakable URL concatenation
+            const targetUrl = API + "/api/analyze-goal";
+            console.log("Sending request to:", targetUrl);
+
+            const res = await fetch(targetUrl, {
                 method: 'POST',
                 body: formData
             });
 
-            // Safe check if Render returns an error or is still waking up
+            // Prevent crashing on HTML error pages
             if (!res.ok) {
                 const errText = await res.text();
-                throw new Error(`Server Status ${res.status}: ${errText.substring(0, 120)}`);
+                throw new Error("Server responded with HTTP " + res.status + ": " + errText.substring(0, 150));
             }
 
             const data = await res.json();
@@ -370,16 +368,15 @@
             if (data.success && data.analysis) {
                 const a = data.analysis;
 
-                document.getElementById('categoryBadge').innerText = a.category.toUpperCase();
-                document.getElementById('confScore').innerText = `${a.confidence || 90}%`;
+                document.getElementById('categoryBadge').innerText = (a.category || "ANALYZED").toUpperCase();
+                document.getElementById('confScore').innerText = (a.confidence || 90) + "%";
                 document.getElementById('finishType').innerText = a.finishType || "Standard";
                 document.getElementById('assistType').innerText = a.assistType || "Open Play";
                 document.getElementById('isGoalText').innerText = a.isGoal ? "Confirmed Goal" : "No Goal / Miss";
-                document.getElementById('breakdownText').innerText = a.tacticalBreakdown;
+                document.getElementById('breakdownText').innerText = a.tacticalBreakdown || "No breakdown provided.";
 
-                // Color accent according to category
                 const badge = document.getElementById('categoryBadge');
-                if (a.category.includes('Cross')) {
+                if (a.category && a.category.includes('Cross')) {
                     badge.style.borderColor = '#00e5ff';
                     badge.style.color = '#00e5ff';
                     badge.style.background = 'rgba(0, 229, 255, 0.1)';
@@ -389,9 +386,8 @@
                     badge.style.background = 'rgba(16, 185, 129, 0.1)';
                 }
 
-                // Populate tags
                 const tagsContainer = document.getElementById('tagsList');
-                tagsContainer.innerHTML = (a.tags || []).map(t => `<span class="tag-pill">#${t}</span>`).join('');
+                tagsContainer.innerHTML = (a.tags || []).map(t => '<span class="tag-pill">#' + t + '</span>').join('');
 
                 resultCard.style.display = 'block';
                 resultCard.scrollIntoView({ behavior: 'smooth' });
@@ -400,11 +396,12 @@
             }
         } catch (e) {
             console.error("AI Error:", e);
-            alert("Connection Error: " + e.message + "\nCheck browser Console (F12) for server details.");
+            alert("Connection Error:\n" + e.message);
         } finally {
             btn.disabled = false;
             loader.style.display = 'none';
         }
+    }
 </script>
 
 </body>
